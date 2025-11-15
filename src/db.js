@@ -3,7 +3,7 @@ const { Pool } = pkg;
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false } // Railway/Supabase butuh SSL
+  ssl: { rejectUnauthorized: false }
 });
 
-export default pool;
+export default pool; // default export

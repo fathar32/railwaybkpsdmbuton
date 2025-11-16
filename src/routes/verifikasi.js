@@ -33,9 +33,13 @@ router.post('/', async (req, res) => {
     return res.json({
       verified: true,
       data: {
-        nomorSurat: row.nomor_surat,
-        namaPegawai: row.nama_pegawai,
-        nip: row.nip
+        nomor_surat: result.rows[0].nomor_surat,
+        nama_pegawai: result.rows[0].nama,
+        nip: result.rows[0].nip,
+        jabatan: result.rows[0].jabatan,
+        unit_kerja: result.rows[0].unit_kerja,
+        tanggal_surat: result.rows[0].tanggal_surat,
+        perihal: result.rows[0].perihal
       },
       message: 'Telah terverifikasi.'
     });

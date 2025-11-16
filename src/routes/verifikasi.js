@@ -1,51 +1,39 @@
-import express from 'express';
-import pool from '../db.js'; // default import
+import express from "express";
+import pool from "../db.js";
 
 const router = express.Router();
 
-router.post('/', async (req, res) => {
+router.post("/", async (req, res) => {
+  const { nomorSurat, namaPegawai } = req.body;
+
   try {
-    const { nomorSurat, namaPegawai } = req.body;
+    // simpan hasil query ke variabel result
+    const result = await pool.query(
+      "SELECT * FROM berkas_verifikasi WHERE nomor_surat = $1 AND nama_pegawai = $2",
+      [nomorSurat, namaPegawai]
+    );
 
-    if (!nomorSurat || !namaPegawai) {
-      return res.status(400).json({ verified: false, message: 'Nomor surat dan nama pegawai wajib diisi.' });
+    if (result.rows.length > 0) {
+      const row = result.rows[0];
+      res.json({
+        verified: true,
+        data: {
+          nomor_surat: row.nomor_surat,
+          nama_pegawai: row.nama_pegawai || row.nama, // sesuaikan dengan nama kolom di DB
+          nip: row.nip,
+          jabatan: row.jabatan,
+          unit_kerja: row.unit_kerja,
+          tanggal_surat: row.tanggal_surat,
+          perihal: row.perihal
+        },
+        message: "Telah terverifikasi."
+      });
+    } else {
+      res.json({ verified: false, message: "Data tidak ditemukan." });
     }
-
-    const query = `
-      SELECT nomor_surat, nama_pegawai, nip, status_verifikasi
-      FROM berkas_verifikasi
-      WHERE nomor_surat = $1 AND LOWER(nama_pegawai) = LOWER($2)
-      LIMIT 1
-    `;
-    const values = [nomorSurat.trim(), namaPegawai.trim()];
-
-    const { rows } = await pool.query(query, values);
-
-    if (rows.length === 0) {
-      return res.status(404).json({ verified: false, message: 'Data tidak ditemukan.' });
-    }
-
-    const row = rows[0];
-    if (!row.status_verifikasi) {
-      return res.json({ verified: false, message: 'Data ditemukan tetapi belum terverifikasi.' });
-    }
-
-    return res.json({
-      verified: true,
-      data: {
-        nomor_surat: result.rows[0].nomor_surat,
-        nama_pegawai: result.rows[0].nama,
-        nip: result.rows[0].nip,
-        jabatan: result.rows[0].jabatan,
-        unit_kerja: result.rows[0].unit_kerja,
-        tanggal_surat: result.rows[0].tanggal_surat,
-        perihal: result.rows[0].perihal
-      },
-      message: 'Telah terverifikasi.'
-    });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ verified: false, message: 'Server error.' });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
